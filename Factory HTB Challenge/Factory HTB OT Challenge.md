@@ -2,19 +2,19 @@
 
 Lets look at the connection first via nmap:
 
-![[Pasted image 20260915002931.png]]
+![Alt text](Pasted image 20260915002931.png)
 
 the challenge gives us 2 files, an image and a pdf, 
-![[Pasted image 20260915001114.png]]
+![Alt text](Pasted image 20260915001114.png)
 
 lets look at this picture. our task is to close the in_valve and open the out_valve
 
 
-![[Pasted image 20260915011908.png]]
+![Alt text](Pasted image 20260915011908.png)
 
 this picture is explaining how auto_mode opens on start, but manual_mode is open only when auto_mode is closed
 
-![[Pasted image 20260915001945.png]]
+![Alt text](Pasted image 20260915001945.png)
 in this photo, were gonna ignore the automatic mode which is at the top, since we're gonna be controlling everything manually. 
 
 so lets look at the bottom 
@@ -28,7 +28,7 @@ this is how we turn on out_valve
 
 
 now for in_valve, we need to turn it off:
-![[Pasted image 20260915003802.png]]
+![Alt text](Pasted image 20260915003802.png)
 
 
 to turn in_valve off, we need the following values:
@@ -39,7 +39,7 @@ stop_in = 1
 
 
 to get those values we need to look up 
-![[Pasted image 20260915003953.png]]
+![Alt text](Pasted image 20260915003953.png)
 to turn stop_in on we need these values:
 
 cutoff_in = 1  
@@ -49,7 +49,7 @@ manual_mode = 1
 # Turning out_valve on plan
 lets look at our original values and simulate what we are going to do before running any command
 
-![[Pasted image 20260915002931.png]]
+![Alt text](Pasted image 20260915002931.png)
 
 - auto_mode = 1
 - manual_mode = 0
@@ -160,7 +160,7 @@ and DDDD represents the value in hex aswell
 
 , in our challenge we had the photo:
 
-![[Pasted image 20260915010336.png]]
+![Alt text](Pasted image 20260915010336.png)
 
 Slave ID is 82 in decimal which is 52
 Second Part is 05 for writing a single coil 
@@ -182,7 +182,7 @@ DDDD: FF00
 Command:
 
 520526DBFF00
-![[Pasted image 20260915011051.png]]
+![Alt text](Pasted image 20260915011051.png)
 
 
 #### Turning on out_valve
@@ -194,7 +194,7 @@ Address: 52 in hex: 0034
 True: FF00
 
 52050034FF00
-![[Pasted image 20260915011340.png]]
+![Alt text](Pasted image 20260915011340.png)
 
 
 
@@ -209,8 +209,6 @@ final command:
 5205001AFF00
 
 
-![[Pasted image 20260915011541.png]]
+![Alt text](Pasted image 20260915011541.png)
 
-we get the flag:
-
-`HTB{14dd32_1091c_15_7h3_1091c_c12cu175_f02_1ndu572141_5y573m5}`
+we get the flag
