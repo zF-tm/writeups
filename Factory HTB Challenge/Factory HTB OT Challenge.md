@@ -2,7 +2,7 @@
 
 ## Analysis
 
-Let's look at the connection first using Nmap:
+Let's look at the connection first using netcat:
 
 ![Nmap Scan](./Pasted%20image%2020260915002931.png)
 
