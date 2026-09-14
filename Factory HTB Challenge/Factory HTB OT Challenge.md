@@ -78,7 +78,7 @@ So our overall plan is now clear.
 
 ---
 
-# Turning `out_valve` On — Plan
+# Turning `out_valve` On Plan
 
 Let's look at the original values before changing anything.
 
@@ -133,7 +133,7 @@ force_start_out = 1
 
 ---
 
-# Turning `in_valve` Off — Plan
+# Turning `in_valve` Off Plan
 
 After completing the previous steps, we expect the state to look like:
 
